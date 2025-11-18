@@ -81,15 +81,6 @@ El proyecto sigue el patrón **MVC (Model-View-Controller)**:
 - **Views**: Interfaces gráficas con Tkinter
 - **Controllers**: Lógica de negocio entre modelos y vistas
 
-## 🔧 Configuración de Base de Datos
-
-La aplicación se conecta a MySQL con las siguientes credenciales por defecto:
-- Host: `127.0.0.1`
-- Usuario: `root`
-- Contraseña: `root`
-- Base de datos: `registrodb`
-- Puerto: `3306`
-
 ## 📝 Licencia
 
 Este proyecto está en fase de desarrollo.
