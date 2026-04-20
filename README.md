@@ -18,8 +18,7 @@ Sistema de escritorio para la gestión integral de talleres mecánicos. Permite 
 
 - **Python 3.x**
 - **Tkinter**: Interfaz gráfica de usuario
-- **MySQL**: Base de datos
-- **mysql-connector-python**: Conexión a base de datos
+- **SQLite**: Base de datos local embebida
 - **pandas**: Procesamiento de datos
 - **openpyxl**: Generación de reportes en Excel
 
@@ -27,7 +26,6 @@ Sistema de escritorio para la gestión integral de talleres mecánicos. Permite 
 
 ```
 et_xmlfile==2.0.0
-mysql-connector-python==9.5.0
 numpy==2.3.4
 openpyxl==3.1.5
 pandas==2.3.3
@@ -50,15 +48,94 @@ cd taller-mecanico
 pip install -r requirements.txt
 ```
 
-3. Configurar base de datos MySQL:
-```bash
-mysql -u root -p < database_schema.sql
-```
-
-4. Ejecutar la aplicación:
+3. Ejecutar la aplicación:
 ```bash
 python main.py
 ```
+
+La base de datos SQLite se crea automaticamente en el primer inicio.
+
+## 💾 Guardado De Datos (Simple)
+
+No necesitas configurar nada.
+
+La aplicacion:
+
+- Guarda los datos automaticamente en el equipo local.
+- Crea respaldos automaticos.
+- Funciona sin internet.
+
+## 🪟 Build E Instalador Windows
+
+### 1) Generar el .exe
+
+En Windows, desde la raiz del proyecto:
+
+```bat
+scripts\build_windows.bat
+```
+
+Resultado:
+
+- `dist/TallerMecanico.exe`
+
+### 2) Crear instalador
+
+1. Instalar Inno Setup en el equipo de build.
+2. Abrir `installer/TallerMecanico.iss`.
+3. Compilar el script.
+
+Resultado:
+
+- `installer/output/TallerMecanico-Setup.exe`
+
+### 3) Distribucion en USB
+
+Copiar a la USB el instalador generado `TallerMecanico-Setup.exe`.
+Por seguridad de Windows, no es posible auto-ejecutar apps al conectar USB en equipos modernos.
+La forma recomendada es abrir el instalador manualmente (doble clic) una sola vez.
+
+## 🔌 Modo Portable (USB Sin Instalar)
+
+Al ejecutar `scripts\build_windows.bat`, tambien se crea una carpeta portable:
+
+- `dist/portable/TallerMecanicoPortable/`
+
+Contenido principal:
+
+- `TallerMecanico.exe`
+- `ABRIR_TALLER.bat`
+- `data/` (se crea vacia para la base local)
+
+Uso:
+
+1. Copiar `dist/portable/TallerMecanicoPortable` a la USB.
+2. En el equipo Windows destino, abrir `ABRIR_TALLER.bat`.
+3. Trabajar normalmente en la aplicacion.
+
+Backups en modo portable:
+
+- Se realizan automaticamente.
+
+## 🧾 Guía Para Imprimir
+
+Para entregar al usuario final en una sola hoja:
+
+- [GUIA_USUARIO_IMPRIMIR.html](GUIA_USUARIO_IMPRIMIR.html)
+
+## ⚙️ Detalle Técnico (Opcional)
+
+Solo si necesitas soporte tecnico o migracion manual:
+
+- Windows instalado: `%LOCALAPPDATA%/TallerMecanico/data/registrodb.sqlite3`
+- Linux instalado: `~/.local/share/taller-mecanico/data/registrodb.sqlite3`
+- Portable USB: `data/registrodb.sqlite3` en la carpeta portable
+
+Respaldos:
+
+- Instalado Windows: `%LOCALAPPDATA%/TallerMecanico/data/backups/`
+- Instalado Linux: `~/.local/share/taller-mecanico/data/backups/`
+- Portable USB: `data/backups/`
 
 ## 📁 Estructura del Proyecto
 

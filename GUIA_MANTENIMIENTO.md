@@ -1,127 +1,93 @@
-# 📖 GUÍA DE MANTENIMIENTO DEL CÓDIGO
+# GUIA DE MANTENIMIENTO DEL CODIGO
 
-## 🎯 INTRODUCCIÓN
+## 1. INTRODUCCION
 
-Esta guía explica cómo mantener y actualizar el sistema de gestión de mantenimiento de vehículos.
+Esta guia describe como mantener, actualizar y desplegar el sistema de gestion del taller mecanico en su estado actual.
+
+Estado actual del proyecto:
+
+- Base de datos local con SQLite.
+- Creacion automatica de base de datos al iniciar la app.
+- Respaldos diarios automaticos.
+- Opcion de instalacion en Windows.
+- Opcion portable en USB (sin instalar).
 
 ---
 
-## 🔧 TIPOS DE MANTENIMIENTO
+## 2. ARQUITECTURA ACTUAL
 
-### 1. **MANTENIMIENTO PREVENTIVO**
-Acciones regulares para evitar problemas futuros.
+Estructura principal:
 
-#### A. **Control de Versiones con GIT**
+- `models/`: acceso a datos y entidades del negocio.
+- `controllers/`: logica de negocio.
+- `views/`: interfaz Tkinter.
+- `services/db_service.py`: conexion SQLite, inicializacion y backup.
+- `database_schema.sql`: esquema unificado de base de datos.
+- `main.py`: arranque de la aplicacion.
+
+Base de datos:
+
+- Motor: SQLite.
+- Archivo principal: `registrodb.sqlite3`.
+- Se crea automaticamente con `database_schema.sql` en el primer inicio.
+
+---
+
+## 3. MANTENIMIENTO PREVENTIVO
+
+### 3.1 Control de versiones (Git)
 
 ```bash
-# Inicializar repositorio (primera vez)
-git init
+git checkout -b feature/nueva-funcionalidad
+# ... cambios ...
 git add .
-git commit -m "Versión inicial del proyecto"
-
-# Crear rama para nueva funcionalidad
-git checkout -b feature/nombre-funcionalidad
-# ... realizar cambios ...
-git add .
-git commit -m "Descripción clara de los cambios"
-
-# Volver a main y fusionar
+git commit -m "Feature: descripcion clara"
 git checkout main
-git merge feature/nombre-funcionalidad
-
-# Crear tags para versiones
-git tag -a v1.0.0 -m "Versión 1.0.0 - Primera versión estable"
-git push origin --tags
+git merge feature/nueva-funcionalidad
 ```
 
-#### B. **Respaldos de Base de Datos**
+### 3.2 Respaldos
+
+La app ya realiza respaldo diario automatico.
+
+Adicionalmente, para respaldo manual rapido, copia el archivo de base de datos (`registrodb.sqlite3`) a una carpeta externa.
+
+Recomendado antes de cambios grandes:
+
+- Cambios en `database_schema.sql`.
+- Cambios en modelos/controladores.
+- Nueva version para usuarios.
+
+### 3.3 Dependencias
 
 ```bash
-# Hacer backup manual (ejecutar periódicamente)
-mysqldump -u root -p registrodb > backup_$(date +%Y%m%d).sql
-
-# Backup de solo estructura
-mysqldump -u root -p --no-data registrodb > estructura_$(date +%Y%m%d).sql
-
-# Restaurar desde backup
-mysql -u root -p registrodb < backup_20250105.sql
+pip install -r requirements.txt
 ```
 
-**Recomendación**: Hacer backup antes de:
-- Actualizar la estructura de la base de datos
-- Desplegar a producción
-- Hacer cambios importantes
-
-#### C. **Actualización de Dependencias**
-
-```bash
-# Ver dependencias actuales y sus versiones
-pip list
-
-# Ver dependencias desactualizadas
-pip list --outdated
-
-# Actualizar una dependencia específica
-pip install --upgrade nombre-paquete
-
-# Actualizar todas (CON PRECAUCIÓN)
-pip install --upgrade -r requirements.txt
-
-# Actualizar requirements.txt
-pip freeze > requirements.txt
-```
-
-**Proceso seguro de actualización**:
-1. Crear backup de la aplicación
-2. Actualizar UNA dependencia a la vez
-3. Probar la aplicación
-4. Si funciona, actualizar requirements.txt
-5. Si falla, revertir: `pip install nombre-paquete==version-anterior`
+Si actualizas paquetes, prueba toda la app antes de publicar una nueva version.
 
 ---
 
-### 2. **MANTENIMIENTO CORRECTIVO**
-Solución de errores y bugs.
+## 4. MANTENIMIENTO CORRECTIVO (ERRORES)
 
-#### Proceso de Solución de Errores:
+Proceso sugerido:
 
-```
-1. IDENTIFICAR
-   └─> Reproducir el error
-   └─> Capturar el mensaje de error completo
-   └─> Identificar en qué parte del código ocurre
+1. Reproducir el error.
+2. Revisar traceback completo.
+3. Corregir en capa correcta:
+   - `models/`: errores de datos/consultas.
+   - `controllers/`: reglas de negocio.
+   - `views/`: formularios/interfaz.
+   - `services/`: conexion/infraestructura.
+4. Probar que el error desaparece.
+5. Verificar que no se rompan otras funcionalidades.
 
-2. UBICAR
-   └─> Revisar el archivo indicado en el error
-   └─> Buscar el método/función problemática
-   └─> Entender el contexto del código
-
-3. CORREGIR
-   └─> Aplicar la solución según la arquitectura MVC:
-       ├─> models/ → Errores de datos/base de datos
-       ├─> views/ → Errores de interfaz/visualización
-       ├─> controllers/ → Errores de lógica de negocio
-       └─> services/ → Errores de servicios (BD, etc.)
-
-4. PROBAR
-   └─> Reproducir el escenario que causaba el error
-   └─> Verificar que ya no ocurre
-   └─> Verificar que no se rompió otra funcionalidad
-
-5. DOCUMENTAR
-   └─> Comentar el cambio en el código
-   └─> Actualizar el commit de git
-```
-
-#### Herramientas de Debugging:
+Debug rapido:
 
 ```python
-# Agregar prints para debugging
-print(f"DEBUG: Variable x = {x}")
-
-# Usar try-except para capturar errores
 try:
-    # código problemático
+    # codigo
+    pass
 except Exception as e:
     print(f"Error: {e}")
     import traceback
@@ -130,374 +96,134 @@ except Exception as e:
 
 ---
 
-### 3. **MANTENIMIENTO EVOLUTIVO**
-Agregar nuevas funcionalidades.
+## 5. MANTENIMIENTO EVOLUTIVO (NUEVAS FUNCIONES)
 
-#### Proceso Completo (Ejemplo: Agregar "Línea del Vehículo"):
+Cuando agregues una nueva funcion:
 
-##### PASO 1: Modificar la Base de Datos
+1. Actualiza `database_schema.sql` (si requiere datos nuevos).
+2. Actualiza `models/`.
+3. Actualiza `controllers/`.
+4. Actualiza `views/`.
+5. Prueba flujos de crear/editar/eliminar/consultar.
+6. Actualiza esta guia y `README.md` si cambia despliegue o uso.
 
-```python
-# Crear script: agregar_campo_linea.py
-import mysql.connector
+Notas para SQLite:
 
-def agregar_columna_linea():
-    try:
-        connection = mysql.connector.connect(
-            user="root",
-            password="root",
-            host="127.0.0.1",
-            database="registrodb",
-            port="3306"
-        )
-        cursor = connection.cursor(dictionary=True)
-        
-        # Verificar si ya existe
-        cursor.execute("SHOW COLUMNS FROM usuarios LIKE 'linea'")
-        if cursor.fetchall():
-            print("⚠️  La columna ya existe")
-            return
-        
-        # Agregar columna
-        cursor.execute("ALTER TABLE usuarios ADD COLUMN linea VARCHAR(50) AFTER Modelo")
-        connection.commit()
-        print("✓ Columna agregada")
-        
-        cursor.close()
-        connection.close()
-    except Exception as e:
-        print(f"Error: {e}")
-
-agregar_columna_linea()
-```
-
-**Ejecutar**: `python agregar_campo_linea.py`
-
-##### PASO 2: Actualizar el Modelo
-
-Archivo: `models/vehiculo_model.py`
-
-```python
-# 1. Agregar parámetro al __init__
-def __init__(self, placa=None, marca=None, modelo=None, linea=None, ...):
-    ...
-    self.linea = linea
-
-# 2. Actualizar método save()
-query = """
-    INSERT INTO vehiculos (Placa, Marca, Modelo, linea, ...)
-    VALUES (%s, %s, %s, %s, ...)
-"""
-params = (self.placa, self.marca, self.modelo, self.linea, ...)
-
-# 3. Actualizar método update()
-query = """
-    UPDATE vehiculos 
-    SET Placa = %s, Marca = %s, Modelo = %s, linea = %s, ...
-    WHERE ID = %s
-"""
-
-# 4. Actualizar métodos de consulta (get_all, get_by_id, etc.)
-query = "SELECT ID, Placa, Marca, Modelo, linea, ... FROM vehiculos"
-formatted_result = {
-    ...
-    'linea': result.get('linea', ''),
-    ...
-}
-```
-
-##### PASO 3: Actualizar el Controlador
-
-Archivo: `controllers/vehiculo_controller.py`
-
-```python
-# Agregar parámetro a create()
-def create(self, placa, marca, modelo, linea, ...):
-    vehiculo = Vehiculo(
-        placa=placa,
-        marca=marca,
-        modelo=modelo,
-        linea=linea,
-        ...
-    )
-    return vehiculo.save()
-
-# Agregar parámetro a update()
-def update(self, id, placa, marca, modelo, linea, ...):
-    vehiculo = Vehiculo(
-        id=id,
-        ...
-        linea=linea,
-        ...
-    )
-    return vehiculo.update()
-```
-
-##### PASO 4: Actualizar la Vista
-
-Archivo: `views/vehiculo_view.py`
-
-```python
-# 1. Agregar variable en setup_ui()
-self.linea_var = StringVar()
-
-# 2. Agregar campo en el formulario
-ttk.Label(data_frame, text="Línea:").grid(row=4, column=0, sticky="w")
-linea_entry = ttk.Entry(data_frame, textvariable=self.linea_var)
-linea_entry.grid(row=4, column=1, padx=5, pady=2)
-linea_entry.bind('<KeyRelease>', lambda e: self.validar_linea(self.linea_var))
-
-# 3. Agregar columna a la tabla
-self.tree = ttk.Treeview(table_frame, columns=(
-    "Placa", "Marca", "Modelo", "Línea", "Kilometraje", "Cliente"
-), ...)
-
-self.tree.heading("Línea", text="Línea", anchor="center")
-self.tree.column("Línea", width=100, anchor="center")
-
-# 4. Actualizar load_data()
-self.tree.insert("", "end", values=(
-    vehiculo.placa,
-    vehiculo.marca,
-    vehiculo.modelo,
-    vehiculo.linea or "",
-    ...
-))
-
-# 5. Actualizar clear_fields()
-self.linea_var.set("")
-
-# 6. Actualizar save() y update()
-linea = self.linea_var.get().strip()
-self.controller.create(
-    ...
-    linea=linea,
-    ...
-)
-
-# 7. Actualizar on_select()
-self.linea_var.set(values[3])
-
-# 8. Agregar validación
-def validar_linea(self, variable):
-    valor = variable.get()
-    valor_limpio = ''.join(c for c in valor if c.isalnum() or c.isspace() or c in '-')
-    valor_limpio = valor_limpio.upper()
-    if valor != valor_limpio:
-        variable.set(valor_limpio)
-```
-
-##### PASO 5: Probar
-
-```bash
-# Verificar errores
-python -m py_compile views/vehiculo_view.py
-python -m py_compile models/vehiculo_model.py
-python -m py_compile controllers/vehiculo_controller.py
-
-# Ejecutar aplicación
-python main.py
-
-# Probar:
-# 1. Crear un vehículo nuevo con línea
-# 2. Editar un vehículo y agregar línea
-# 3. Verificar que se muestra en la tabla
-# 4. Buscar un vehículo y verificar que se carga el campo
-```
+- Placeholder de consultas: la app soporta `%s` de forma transparente desde `DatabaseService`.
+- Si agregas columnas/tablas, usa SQL compatible con SQLite.
 
 ---
 
-## 🚀 PREPARACIÓN PARA PRODUCCIÓN
+## 6. DESPLIEGUE EN WINDOWS (EJECUTABLE)
 
-### 1. **Lista de Verificación Pre-Despliegue**
+### 6.1 Requisitos en PC de build
 
-```
-□ Todos los archivos obsoletos eliminados
-□ Backup de base de datos realizado
-□ requirements.txt actualizado
-□ Sin errores de sintaxis (ejecutar compilación)
-□ Todas las validaciones funcionando
-□ Tests manuales completados
-□ Documentación actualizada
-□ Variables de configuración verificadas
-□ Credenciales de BD configuradas para producción
-```
+- Windows 10/11.
+- Python 3 instalado y agregado al PATH.
+- Proyecto descargado.
 
-### 2. **Configurar para Producción**
+### 6.2 Generar ejecutable
 
-Crear archivo: `config.py`
+Desde la raiz del proyecto, ejecutar:
 
-```python
-import os
-
-class Config:
-    # Desarrollo
-    DEBUG = True
-    DB_HOST = "127.0.0.1"
-    DB_USER = "root"
-    DB_PASSWORD = "root"
-    DB_NAME = "registrodb"
-    DB_PORT = "3306"
-
-class ProductionConfig(Config):
-    # Producción
-    DEBUG = False
-    DB_HOST = os.getenv("DB_HOST", "localhost")
-    DB_USER = os.getenv("DB_USER", "usuario_prod")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "password_seguro")
-    DB_NAME = os.getenv("DB_NAME", "registrodb_prod")
-    DB_PORT = os.getenv("DB_PORT", "3306")
+```bat
+scripts\build_windows.bat
 ```
 
-Usar en `services/db_service.py`:
+Este script hace:
 
-```python
-from config import ProductionConfig as Config
+1. Instala dependencias.
+2. Construye `dist/TallerMecanico.exe`.
+3. Crea paquete portable en `dist/portable/TallerMecanicoPortable/`.
 
-connection = mysql.connector.connect(
-    user=Config.DB_USER,
-    password=Config.DB_PASSWORD,
-    host=Config.DB_HOST,
-    database=Config.DB_NAME,
-    port=Config.DB_PORT
-)
-```
+### 6.3 Crear instalador (opcional recomendado)
 
-### 3. **Crear Ejecutable**
+1. Instalar Inno Setup.
+2. Abrir `installer/TallerMecanico.iss`.
+3. Compilar.
 
-```bash
-# Instalar PyInstaller
-pip install pyinstaller
+Salida esperada:
 
-# Crear ejecutable
-pyinstaller --onefile --windowed --icon=icono.ico main.py
-
-# El ejecutable estará en: dist/main.exe
-```
+- `installer/output/TallerMecanico-Setup.exe`.
 
 ---
 
-## 📝 BUENAS PRÁCTICAS
+## 7. MODOS DE ENTREGA AL USUARIO
 
-### 1. **Documentación del Código**
+### 7.1 Modo instalado (recomendado para uso diario)
 
-```python
-def metodo_ejemplo(parametro1, parametro2):
-    """
-    Descripción breve del método.
-    
-    Args:
-        parametro1 (tipo): Descripción del parámetro 1
-        parametro2 (tipo): Descripción del parámetro 2
-    
-    Returns:
-        tipo: Descripción de lo que retorna
-    
-    Raises:
-        TipoError: Cuando ocurre X condición
-    """
-    # Código aquí
-    pass
-```
+Entregar:
 
-### 2. **Nombres Descriptivos**
+- `TallerMecanico-Setup.exe`.
 
-```python
-# ❌ Malo
-def f(x, y):
-    return x + y
+Usuario final:
 
-# ✓ Bueno
-def calcular_total_precio(precio_base, impuesto):
-    return precio_base + impuesto
-```
+1. Doble clic en instalador.
+2. Siguiente, siguiente, finalizar.
+3. Abrir desde acceso directo `TallerMecanico`.
 
-### 3. **Commits Descriptivos**
+### 7.2 Modo USB portable (sin instalar)
 
-```bash
-# ❌ Malo
-git commit -m "fix"
-git commit -m "cambios"
+Entregar carpeta:
 
-# ✓ Bueno
-git commit -m "Fix: Corregir cálculo de total en precios"
-git commit -m "Feature: Agregar campo línea a vehículos"
-git commit -m "Refactor: Mejorar validación de campos numéricos"
-```
+- `dist/portable/TallerMecanicoPortable/`
 
-### 4. **Manejo de Errores**
+Usuario final:
 
-```python
-# Siempre usar try-except en operaciones que pueden fallar
-try:
-    resultado = operacion_que_puede_fallar()
-    self.show_info("Operación exitosa")
-except ValueError as e:
-    self.show_error(f"Error de valor: {e}")
-except Exception as e:
-    self.show_error(f"Error inesperado: {e}")
-    # Opcional: logging para debugging
-    import logging
-    logging.error(f"Error en método_X: {e}", exc_info=True)
-```
+1. Abrir carpeta en USB.
+2. Doble clic en `ABRIR_TALLER.bat`.
+3. Usar normalmente.
+
+Importante:
+
+- En Windows moderno no se permite auto-ejecucion al conectar USB.
+- Siempre se debe abrir manualmente con doble clic.
 
 ---
 
-## 🆘 SOLUCIÓN DE PROBLEMAS COMUNES
+## 8. LISTA DE VERIFICACION ANTES DE PUBLICAR
 
-### Error: "Module not found"
-```bash
-# Verificar instalación
-pip list | grep nombre-modulo
-
-# Reinstalar
-pip install nombre-modulo
-```
-
-### Error: "Can't connect to MySQL"
-```bash
-# Verificar que MySQL esté corriendo
-# En Windows: Services → MySQL80 → Start
-
-# Verificar credenciales en db_service.py
-```
-
-### Error: "Column doesn't exist"
-```bash
-# Verificar estructura de tabla
-mysql -u root -p
-USE registrodb;
-DESCRIBE nombre_tabla;
-
-# Si falta columna, ejecutar script ALTER TABLE
-```
+- [ ] `database_schema.sql` actualizado.
+- [ ] Sin errores en editor.
+- [ ] Flujo clientes/vehiculos/mantenimientos probado.
+- [ ] Exportes y reportes probados.
+- [ ] Build `scripts\\build_windows.bat` exitoso.
+- [ ] Instalador compilado (si aplica).
+- [ ] Guia usuario actualizada (`GUIA_USUARIO_FINAL.md`).
+- [ ] Guia imprimible actualizada (`GUIA_USUARIO_IMPRIMIR.html`).
 
 ---
 
-## 📚 RECURSOS ADICIONALES
+## 9. SOLUCION DE PROBLEMAS FRECUENTES
 
-- **Python Documentation**: https://docs.python.org/3/
-- **Tkinter Documentation**: https://docs.python.org/3/library/tkinter.html
-- **MySQL Documentation**: https://dev.mysql.com/doc/
-- **Git Documentation**: https://git-scm.com/doc
+### 9.1 El ejecutable no abre
 
----
+- Ejecutar desde terminal para ver error.
+- Verificar antivirus/SmartScreen.
+- Regenerar con `scripts\\build_windows.bat`.
 
-## ✅ RESUMEN DEL PROCESO
+### 9.2 Error de base de datos
 
-1. **Planificar** el cambio
-2. **Hacer backup** (código y BD)
-3. **Modificar BD** (si necesario)
-4. **Actualizar Modelo** (models/)
-5. **Actualizar Controlador** (controllers/)
-6. **Actualizar Vista** (views/)
-7. **Probar** exhaustivamente
-8. **Documentar** el cambio
-9. **Commit** a git
-10. **Desplegar** si todo funciona
+- Verificar que existe `database_schema.sql` en el proyecto/bundle.
+- Revisar permisos de escritura en el equipo o USB.
+- Probar reiniciar app (genera estructura automaticamente).
+
+### 9.3 Usuario reporta perdida de datos
+
+- Revisar respaldos automaticos del dia.
+- Restaurar copiando respaldo sobre la base actual con la app cerrada.
 
 ---
 
-**Fecha de creación**: 5 de Noviembre, 2025
-**Última actualización**: 5 de Noviembre, 2025
-**Versión**: 1.0
+## 10. REFERENCIAS
+
+- Python: https://docs.python.org/3/
+- Tkinter: https://docs.python.org/3/library/tkinter.html
+- SQLite: https://www.sqlite.org/docs.html
+- PyInstaller: https://pyinstaller.org/
+- Inno Setup: https://jrsoftware.org/isinfo.php
+
+---
+
+Ultima actualizacion: 2026-04-20
+Version de la guia: 2.0

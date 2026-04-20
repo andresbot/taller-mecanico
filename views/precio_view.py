@@ -325,7 +325,7 @@ class PrecioView(BaseView):
                 # Actualizar
                 update_query = """
                     UPDATE precios_mantenimiento 
-                    SET precio_principal = %s, detalles_adicionales = %s, fecha_actualizacion = NOW()
+                    SET precio_principal = %s, detalles_adicionales = %s, fecha_actualizacion = CURRENT_TIMESTAMP
                     WHERE mantenimiento_id = %s
                 """
                 self.db.execute_query(update_query, (precio_principal, detalles_adicionales, mantenimiento_id))

@@ -26,3 +26,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Build artifacts
+build/
+dist/
+*.spec
+installer/output/
