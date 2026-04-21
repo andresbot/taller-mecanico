@@ -16,9 +16,37 @@ class PrecioView(BaseView):
         super().__init__(master)
 
     def setup_ui(self):
-        # Contenedor centrado
+        # Canvas scrollable para toda la vista
+        self.frame.grid_rowconfigure(0, weight=1)
         self.frame.grid_columnconfigure(0, weight=1)
-        container = ttk.Frame(self.frame)
+
+        canvas = tk.Canvas(self.frame, highlightthickness=0)
+        scrollbar_v = ttk.Scrollbar(self.frame, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar_v.set)
+
+        canvas.grid(row=0, column=0, sticky="nsew")
+        scrollbar_v.grid(row=0, column=1, sticky="ns")
+
+        inner_frame = ttk.Frame(canvas)
+        canvas_window = canvas.create_window((0, 0), window=inner_frame, anchor="nw")
+
+        def _on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        def _on_canvas_configure(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        inner_frame.bind("<Configure>", _on_frame_configure)
+        canvas.bind("<Configure>", _on_canvas_configure)
+        canvas.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        # Contenedor centrado dentro del canvas
+        inner_frame.grid_columnconfigure(0, weight=1)
+        container = ttk.Frame(inner_frame)
         container.grid(row=0, column=0, padx=10, pady=10)
 
         # Frame principal
