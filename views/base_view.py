@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import tkinter as tk
 from tkinter import ttk, messagebox
 
 class BaseView(ABC):

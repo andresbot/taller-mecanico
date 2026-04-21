@@ -1,10 +1,10 @@
 import tkinter as tk
-from tkinter import ttk, StringVar, Frame
+from tkinter import ttk
 from views.base_view import BaseView
 from controllers.mantenimiento_controller import MantenimientoController
 from controllers.vehiculo_controller import VehiculoController
-from models.mantenimiento_varios_model import TipoMantenimientoVarios
 from datetime import datetime
+from utils.styles import AppStyles
 
 class MantenimientoBaseView(BaseView):
     MECANICOS = [
@@ -38,6 +38,54 @@ class MantenimientoBaseView(BaseView):
             # Establecer geometría
             master.geometry(f"{window_width}x{window_height}+{x}+{y}")
             master.minsize(700, 600)  # Tamaño mínimo
+
+    def crear_seccion_numerada(self, parent, row, titulo, subtitulo=""):
+        """Crea una seccion visual tipo card con acento lateral y titulo."""
+        card = tk.Frame(
+            parent,
+            bg=AppStyles.get_color('white'),
+            bd=1,
+            relief='solid',
+            highlightthickness=0
+        )
+        card.grid(row=row, column=0, columnspan=3, sticky='ew', padx=6, pady=8)
+        card.grid_columnconfigure(1, weight=1)
+
+        accent = tk.Frame(card, bg=AppStyles.get_color('accent'), width=5)
+        accent.grid(row=0, column=0, rowspan=2, sticky='nsw')
+
+        header = tk.Frame(card, bg=AppStyles.get_color('white'))
+        header.grid(row=0, column=1, sticky='ew', padx=(10, 10), pady=(10, 0))
+        tk.Label(
+            header,
+            text=titulo,
+            bg=AppStyles.get_color('white'),
+            fg=AppStyles.get_color('primary'),
+            font=('Segoe UI', 12, 'bold')
+        ).pack(anchor='w')
+
+        if subtitulo:
+            tk.Label(
+                header,
+                text=subtitulo,
+                bg=AppStyles.get_color('white'),
+                fg=AppStyles.get_color('text_light'),
+                font=('Segoe UI', 9)
+            ).pack(anchor='w', pady=(2, 0))
+
+        body = ttk.Frame(card, padding=(10, 8))
+        body.grid(row=1, column=1, sticky='ew')
+        body.columnconfigure(1, weight=1)
+        return body
+
+    def crear_fila_botones(self, parent, row, comando_guardar):
+        """Crea la fila estandar de botones de accion."""
+        btn_frame = ttk.Frame(parent)
+        btn_frame.grid(row=row, column=0, columnspan=3, pady=18)
+
+        btn_text = "Actualizar" if self.modo_edicion else "Guardar Orden"
+        self.crear_boton_estilizado(btn_frame, btn_text, comando_guardar, "primary").pack(side="left", padx=8)
+        self.crear_boton_estilizado(btn_frame, "Cancelar", self.frame.master.destroy, "secondary").pack(side="left", padx=8)
     
     def crear_frame_con_scroll(self, parent, titulo, padding=15):
         """Crea un frame con scrollbar vertical para el contenido"""
@@ -95,51 +143,51 @@ class MantenimientoBaseView(BaseView):
 
     def setup_common_fields(self, frame):
         # Campos comunes para todos los tipos de mantenimiento
-        # Configurar el grid para mejor alineación
-        frame.columnconfigure(0, weight=0, minsize=120)  # Columna de labels con ancho fijo
-        frame.columnconfigure(1, weight=1, minsize=300)  # Columna de campos
-        frame.columnconfigure(2, weight=0)  # Columna para hints
+        frame.columnconfigure(0, weight=0, minsize=150)
+        frame.columnconfigure(1, weight=1, minsize=320)
+        frame.columnconfigure(2, weight=0)
         
         # Ancho estándar para todos los campos
         campo_ancho = 35
         
         # Fecha
-        ttk.Label(frame, text="Fecha:", font=("Arial", 9, "bold")).grid(
+        ttk.Label(frame, text="Fecha:", font=("Segoe UI", 10, "bold")).grid(
             row=0, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.fecha_entry = ttk.Entry(frame, width=15, font=("Arial", 9))
+        self.fecha_entry = ttk.Entry(frame, width=18)
         self.fecha_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         self.fecha_entry.grid(row=0, column=1, sticky="w", padx=5, pady=5)
-        ttk.Label(frame, text="(AAAA-MM-DD)", font=("Arial", 8), foreground="gray").grid(
+        ttk.Label(frame, text="(AAAA-MM-DD)", font=("Segoe UI", 8), foreground="gray").grid(
             row=0, column=2, sticky="w", pady=5
         )
         
         # Kilometraje
-        ttk.Label(frame, text="Kilometraje:", font=("Arial", 9, "bold")).grid(
+        ttk.Label(frame, text="Kilometraje:", font=("Segoe UI", 10, "bold")).grid(
             row=1, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.kilometraje_entry = ttk.Entry(frame, width=campo_ancho, font=("Arial", 9))
+        self.kilometraje_entry = ttk.Entry(frame, width=campo_ancho)
         self.kilometraje_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
         self.kilometraje_entry.bind('<KeyRelease>', lambda e: self.validar_solo_numeros(self.kilometraje_entry))
         
         # Mecánico
-        ttk.Label(frame, text="Mecánico:", font=("Arial", 9, "bold")).grid(
+        ttk.Label(frame, text="Mecanico:", font=("Segoe UI", 10, "bold")).grid(
             row=2, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.mecanico_combo = ttk.Combobox(frame, values=self.MECANICOS, width=campo_ancho-2, font=("Arial", 9))
+        self.mecanico_combo = ttk.Combobox(frame, values=self.MECANICOS, width=campo_ancho-2)
         self.mecanico_combo.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
         self.mecanico_combo.bind('<KeyRelease>', lambda e: self.validar_mecanico())
         
         # Observaciones
-        ttk.Label(frame, text="Observaciones:", font=("Arial", 9, "bold")).grid(
+        ttk.Label(frame, text="Observaciones:", font=("Segoe UI", 10, "bold")).grid(
             row=3, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.observaciones_text = ttk.Entry(frame, width=campo_ancho, font=("Arial", 9))
+        self.observaciones_text = ttk.Entry(frame, width=campo_ancho)
         self.observaciones_text.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
 
+        next_row = 4
         # Si no se proporciona un vehículo_id, mostrar selector de vehículo
         if not self.vehiculo_id:
-            ttk.Label(frame, text="Vehículo:", font=("Arial", 9, "bold")).grid(
+            ttk.Label(frame, text="Vehiculo:", font=("Segoe UI", 10, "bold")).grid(
                 row=4, column=0, sticky="e", padx=(10, 5), pady=5
             )
             
@@ -155,10 +203,10 @@ class MantenimientoBaseView(BaseView):
             ttk.Separator(vehiculo_frame, orient="vertical").grid(row=0, column=1, sticky="ns", padx=8)
             
             # Label y campo de búsqueda por placa
-            buscar_label = ttk.Label(vehiculo_frame, text="🔍", font=("Segoe UI Emoji", 10))
+            buscar_label = ttk.Label(vehiculo_frame, text="[ ]", font=("Segoe UI", 10))
             buscar_label.grid(row=0, column=2, sticky="w", padx=(0, 3))
             
-            self.buscar_placa_entry = ttk.Entry(vehiculo_frame, width=15, font=("Arial", 9))
+            self.buscar_placa_entry = ttk.Entry(vehiculo_frame, width=15)
             self.buscar_placa_entry.grid(row=0, column=3, sticky="w")
             self.buscar_placa_entry.insert(0, "Buscar placa...")
             self.buscar_placa_entry.config(foreground="gray")
@@ -169,6 +217,9 @@ class MantenimientoBaseView(BaseView):
             self.buscar_placa_entry.bind("<KeyRelease>", self.buscar_vehiculo_por_placa)
             
             self.cargar_vehiculos()
+            next_row = 5
+
+        return next_row
 
     def cargar_vehiculos(self):
         vehiculos = self.vehiculo_controller.get_all()
@@ -262,35 +313,9 @@ class MantenimientoBaseView(BaseView):
             self.mecanico_combo.set(valor_limpio)
     
     def crear_boton_estilizado(self, parent, text, command, tipo="primary"):
-        """Crea un botón con estilo personalizado"""
-        if tipo == "primary":
-            # Botón principal (Guardar/Actualizar) - Verde
-            style_name = "Primary.TButton"
-            if not hasattr(self, '_primary_style_created'):
-                style = ttk.Style()
-                style.configure("Primary.TButton",
-                    foreground="white",
-                    background="#28a745",
-                    font=("Arial", 9, "bold"),
-                    padding=(10, 5))
-                style.map("Primary.TButton",
-                    background=[('active', '#218838'), ('pressed', '#1e7e34')])
-                self._primary_style_created = True
-        else:
-            # Botón secundario (Cancelar) - Gris
-            style_name = "Secondary.TButton"
-            if not hasattr(self, '_secondary_style_created'):
-                style = ttk.Style()
-                style.configure("Secondary.TButton",
-                    foreground="white",
-                    background="#6c757d",
-                    font=("Arial", 9),
-                    padding=(10, 5))
-                style.map("Secondary.TButton",
-                    background=[('active', '#5a6268'), ('pressed', '#545b62')])
-                self._secondary_style_created = True
-        
-        btn = ttk.Button(parent, text=text, command=command, style=style_name, width=14)
+        """Crea un boton con estilo del tema global."""
+        style_name = "Primary.TButton" if tipo == "primary" else "Secondary.TButton"
+        btn = ttk.Button(parent, text=text, command=command, style=style_name, width=16)
         return btn
 
     # Se eliminan métodos de gestión de 'Mantenimientos Varios' de las ventanas individuales
@@ -303,42 +328,44 @@ class CambioAceiteView(MantenimientoBaseView):
         self.tipo_aceite_entry.delete(0, 'end')
 
     def setup_ui(self):
-        # Frame principal con scroll
         titulo = "Editar Cambio de Aceite" if self.modo_edicion else "Cambio de Aceite"
         main_frame = self.crear_frame_con_scroll(self.frame, titulo)
 
-        # Campos comunes
-        self.setup_common_fields(main_frame)
+        common_section = self.crear_seccion_numerada(
+            main_frame,
+            row=0,
+            titulo="1. Datos Generales",
+            subtitulo="Seleccion de vehiculo, fecha, kilometraje y tecnico"
+        )
+        self.setup_common_fields(common_section)
 
-        # Campos específicos
-        row = 5 if not self.vehiculo_id else 4
+        details_section = self.crear_seccion_numerada(
+            main_frame,
+            row=1,
+            titulo="2. Servicio de Cambio de Aceite",
+            subtitulo="Especificaciones de filtros y tipo de aceite"
+        )
         campo_ancho = 35
         
-        ttk.Label(main_frame, text="Filtro de Aceite:", font=("Arial", 9, "bold")).grid(
-            row=row, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Filtro de Aceite:", font=("Segoe UI", 10, "bold")).grid(
+            row=0, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.filtro_aceite_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.filtro_aceite_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        self.filtro_aceite_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.filtro_aceite_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
 
-        ttk.Label(main_frame, text="Filtro de Aire:", font=("Arial", 9, "bold")).grid(
-            row=row+1, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Filtro de Aire:", font=("Segoe UI", 10, "bold")).grid(
+            row=1, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.filtro_aire_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.filtro_aire_entry.grid(row=row+1, column=1, sticky="ew", padx=5, pady=5)
+        self.filtro_aire_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.filtro_aire_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
 
-        ttk.Label(main_frame, text="Tipo de Aceite:", font=("Arial", 9, "bold")).grid(
-            row=row+2, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Tipo de Aceite:", font=("Segoe UI", 10, "bold")).grid(
+            row=2, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.tipo_aceite_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.tipo_aceite_entry.grid(row=row+2, column=1, sticky="ew", padx=5, pady=5)
+        self.tipo_aceite_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.tipo_aceite_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
 
-        # Frame para botones centrado
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.grid(row=row+3, column=0, columnspan=3, pady=20)
-        
-        btn_text = "Actualizar" if self.modo_edicion else "Guardar"
-        self.crear_boton_estilizado(btn_frame, btn_text, self.save, "primary").pack(side="left", padx=8)
-        self.crear_boton_estilizado(btn_frame, "Cancelar", self.frame.master.destroy, "secondary").pack(side="left", padx=8)
+        self.crear_fila_botones(main_frame, row=2, comando_guardar=self.save)
 
         # Cargar datos si es edición
         if self.modo_edicion:
@@ -404,48 +431,50 @@ class MantenimientoFrenosView(MantenimientoBaseView):
         self.estado_campanas_entry.delete(0, 'end')
 
     def setup_ui(self):
-        # Frame principal con scroll
         titulo = "Editar Mantenimiento de Frenos" if self.modo_edicion else "Mantenimiento de Frenos"
         main_frame = self.crear_frame_con_scroll(self.frame, titulo)
 
-        # Campos comunes
-        self.setup_common_fields(main_frame)
+        common_section = self.crear_seccion_numerada(
+            main_frame,
+            row=0,
+            titulo="1. Datos Generales",
+            subtitulo="Datos base del servicio"
+        )
+        self.setup_common_fields(common_section)
 
-        # Campos específicos
-        row = 5 if not self.vehiculo_id else 4
+        details_section = self.crear_seccion_numerada(
+            main_frame,
+            row=1,
+            titulo="2. Inspeccion de Frenos",
+            subtitulo="Estado de componentes criticos"
+        )
         campo_ancho = 35
 
-        ttk.Label(main_frame, text="Estado Pastillas:", font=("Arial", 9, "bold")).grid(
-            row=row, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Estado Pastillas:", font=("Segoe UI", 10, "bold")).grid(
+            row=0, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.estado_pastillas_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.estado_pastillas_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        self.estado_pastillas_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.estado_pastillas_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
 
-        ttk.Label(main_frame, text="Estado Discos:", font=("Arial", 9, "bold")).grid(
-            row=row+1, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Estado Discos:", font=("Segoe UI", 10, "bold")).grid(
+            row=1, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.estado_discos_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.estado_discos_entry.grid(row=row+1, column=1, sticky="ew", padx=5, pady=5)
+        self.estado_discos_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.estado_discos_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
 
-        ttk.Label(main_frame, text="Estado Líquido:", font=("Arial", 9, "bold")).grid(
-            row=row+2, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Estado Liquido:", font=("Segoe UI", 10, "bold")).grid(
+            row=2, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.estado_liquido_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.estado_liquido_entry.grid(row=row+2, column=1, sticky="ew", padx=5, pady=5)
+        self.estado_liquido_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.estado_liquido_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
 
-        ttk.Label(main_frame, text="Estado Campanas:", font=("Arial", 9, "bold")).grid(
-            row=row+3, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Estado Campanas:", font=("Segoe UI", 10, "bold")).grid(
+            row=3, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.estado_campanas_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.estado_campanas_entry.grid(row=row+3, column=1, sticky="ew", padx=5, pady=5)
+        self.estado_campanas_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.estado_campanas_entry.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
 
-        # Frame para botones centrado
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.grid(row=row+4, column=0, columnspan=3, pady=20)
-        
-        btn_text = "Actualizar" if self.modo_edicion else "Guardar"
-        self.crear_boton_estilizado(btn_frame, btn_text, self.save, "primary").pack(side="left", padx=8)
-        self.crear_boton_estilizado(btn_frame, "Cancelar", self.frame.master.destroy, "secondary").pack(side="left", padx=8)
+        self.crear_fila_botones(main_frame, row=2, comando_guardar=self.save)
 
         # Cargar datos si es edición
         if self.modo_edicion:
@@ -513,50 +542,49 @@ class MantenimientoGeneralView(MantenimientoBaseView):
         self.estado_correa_entry.delete(0, 'end')
 
     def setup_ui(self):
-        # Frame principal con scroll
         titulo = "Editar Mantenimiento General" if self.modo_edicion else "Mantenimiento General"
         main_frame = self.crear_frame_con_scroll(self.frame, titulo)
 
-        # Campos comunes
-        self.setup_common_fields(main_frame)
+        common_section = self.crear_seccion_numerada(
+            main_frame,
+            row=0,
+            titulo="1. Datos Generales",
+            subtitulo="Informacion base del mantenimiento"
+        )
+        self.setup_common_fields(common_section)
 
-        # Campos específicos
-        row = 5 if not self.vehiculo_id else 4
+        details_section = self.crear_seccion_numerada(
+            main_frame,
+            row=1,
+            titulo="2. Chequeo General",
+            subtitulo="Estado de sistemas generales del vehiculo"
+        )
         campo_ancho = 35
 
-        ttk.Label(main_frame, text="Estado Luces:", font=("Arial", 9, "bold")).grid(
-            row=row, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Estado Luces:", font=("Segoe UI", 10, "bold")).grid(
+            row=0, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.estado_luces_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.estado_luces_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        self.estado_luces_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.estado_luces_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
 
-        ttk.Label(main_frame, text="Estado Frenos:", font=("Arial", 9, "bold")).grid(
-            row=row+1, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Estado Frenos:", font=("Segoe UI", 10, "bold")).grid(
+            row=1, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.estado_frenos_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.estado_frenos_entry.grid(row=row+1, column=1, sticky="ew", padx=5, pady=5)
+        self.estado_frenos_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.estado_frenos_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
 
-        ttk.Label(main_frame, text="Estado Correa:", font=("Arial", 9, "bold")).grid(
-            row=row+2, column=0, sticky="e", padx=(10, 5), pady=5
+        ttk.Label(details_section, text="Estado Correa:", font=("Segoe UI", 10, "bold")).grid(
+            row=2, column=0, sticky="e", padx=(10, 5), pady=5
         )
-        self.estado_correa_entry = ttk.Entry(main_frame, width=campo_ancho, font=("Arial", 9))
-        self.estado_correa_entry.grid(row=row+2, column=1, sticky="ew", padx=5, pady=5)
+        self.estado_correa_entry = ttk.Entry(details_section, width=campo_ancho)
+        self.estado_correa_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
 
-        # Frame para botones centrado
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.grid(row=row+3, column=0, columnspan=3, pady=20)
-        
-        btn_text = "Actualizar" if self.modo_edicion else "Guardar"
-        self.crear_boton_estilizado(btn_frame, btn_text, self.save, "primary").pack(side="left", padx=8)
-        self.crear_boton_estilizado(btn_frame, "Cancelar", self.frame.master.destroy, "secondary").pack(side="left", padx=8)
+        self.crear_fila_botones(main_frame, row=2, comando_guardar=self.save)
 
         # Cargar datos si es edición
         if self.modo_edicion:
             self.cargar_datos()
 
-    def cargar_datos(self):
-        """Carga los datos del mantenimiento para edición"""
-        from models.mantenimiento_model import MantenimientoGeneral
 
     def cargar_datos(self):
         """Carga los datos del mantenimiento para edición"""
@@ -656,48 +684,56 @@ class MantenimientoCorrectivoView(MantenimientoBaseView):
         self.trabajos_canvas.configure(scrollregion=self.trabajos_canvas.bbox("all"))
 
     def setup_ui(self):
-        # Frame principal con scroll
         titulo = "Editar Mantenimiento Correctivo" if self.modo_edicion else "Nuevo Mantenimiento Correctivo"
         main_frame = self.crear_frame_con_scroll(self.frame, titulo)
 
-        # Campos comunes
-        self.setup_common_fields(main_frame)
-
-        # Campos específicos
-        row = 5 if not self.vehiculo_id else 4
-
-        ttk.Label(main_frame, text="Detalles de la Falla:", font=("Arial", 9, "bold")).grid(
-            row=row, column=0, sticky="ne", padx=(10, 5), pady=(5,0)
+        common_section = self.crear_seccion_numerada(
+            main_frame,
+            row=0,
+            titulo="1. Datos Generales",
+            subtitulo="Informacion principal de la orden"
         )
-        self.detalles_falla_text = tk.Text(main_frame, height=4, width=40, font=("Arial", 9), wrap="word")
-        self.detalles_falla_text.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        self.setup_common_fields(common_section)
 
-        ttk.Label(main_frame, text="Daños Colaterales:", font=("Arial", 9, "bold")).grid(
-            row=row+1, column=0, sticky="ne", padx=(10, 5), pady=(5,0)
+        details_section = self.crear_seccion_numerada(
+            main_frame,
+            row=1,
+            titulo="2. Diagnostico Correctivo",
+            subtitulo="Describe falla principal y danos detectados"
         )
-        self.danos_colaterales_text = tk.Text(main_frame, height=4, width=40, font=("Arial", 9), wrap="word")
-        self.danos_colaterales_text.grid(row=row+1, column=1, sticky="ew", padx=5, pady=5)
 
-        # Sección de trabajos adicionales
-        ttk.Label(main_frame, text="Trabajos Realizados:", font=("Arial", 9, "bold")).grid(
-            row=row+2, column=0, sticky="ne", padx=(10, 5), pady=(10,0)
+        ttk.Label(details_section, text="Detalles de la Falla:", font=("Segoe UI", 10, "bold")).grid(
+            row=0, column=0, sticky="ne", padx=(10, 5), pady=(5,0)
+        )
+        self.detalles_falla_text = tk.Text(details_section, height=4, width=40, font=("Segoe UI", 9), wrap="word")
+        self.detalles_falla_text.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
+
+        ttk.Label(details_section, text="Danos Colaterales:", font=("Segoe UI", 10, "bold")).grid(
+            row=1, column=0, sticky="ne", padx=(10, 5), pady=(5,0)
+        )
+        self.danos_colaterales_text = tk.Text(details_section, height=4, width=40, font=("Segoe UI", 9), wrap="word")
+        self.danos_colaterales_text.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
+
+        trabajos_section = self.crear_seccion_numerada(
+            main_frame,
+            row=2,
+            titulo="3. Trabajos y Mano de Obra",
+            subtitulo="Selecciona los trabajos ejecutados"
         )
         
-        # Frame contenedor para búsqueda y lista de trabajos
-        trabajos_container = ttk.Frame(main_frame)
-        trabajos_container.grid(row=row+2, column=1, sticky="ew", padx=5, pady=5)
+        trabajos_container = ttk.Frame(trabajos_section)
+        trabajos_container.grid(row=0, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
         
         # Frame para el buscador
         buscar_trabajos_frame = ttk.Frame(trabajos_container)
         buscar_trabajos_frame.pack(fill="x", pady=(0, 5))
         
         # Campo de búsqueda
-        buscar_icon = ttk.Label(buscar_trabajos_frame, text="🔍", font=("Segoe UI Emoji", 10))
+        buscar_icon = ttk.Label(buscar_trabajos_frame, text="[ ]", font=("Segoe UI", 10))
         buscar_icon.pack(side="left", padx=(0, 5))
         
         self.buscar_trabajo_var = tk.StringVar()
-        self.buscar_trabajo_entry = ttk.Entry(buscar_trabajos_frame, textvariable=self.buscar_trabajo_var, 
-                                               width=40, font=("Arial", 9))
+        self.buscar_trabajo_entry = ttk.Entry(buscar_trabajos_frame, textvariable=self.buscar_trabajo_var, width=40)
         self.buscar_trabajo_entry.pack(side="left", fill="x", expand=True)
         self.buscar_trabajo_entry.insert(0, "Buscar trabajo...")
         self.buscar_trabajo_entry.config(foreground="gray")
@@ -747,17 +783,7 @@ class MantenimientoCorrectivoView(MantenimientoBaseView):
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Frame para botones centrado
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.grid(row=row+3, column=0, columnspan=3, pady=20)
-        
-        btn_text = "Actualizar" if self.modo_edicion else "Guardar"
-        self.crear_boton_estilizado(btn_frame, btn_text, self.save, "primary").pack(side="left", padx=8)
-        self.crear_boton_estilizado(btn_frame, "Cancelar", self.frame.master.destroy, "secondary").pack(side="left", padx=8)
-
-        # Cargar datos si es edición
-        if self.modo_edicion:
-            self.cargar_datos()
+        self.crear_fila_botones(main_frame, row=3, comando_guardar=self.save)
 
         # Cargar datos si es edición
         if self.modo_edicion:

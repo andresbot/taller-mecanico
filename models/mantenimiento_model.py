@@ -60,11 +60,26 @@ class Mantenimiento(BaseModel):
 
     @staticmethod
     def _format_result(result):
+        """Parse fecha_mantenimiento from string to datetime object"""
+        fecha_str = result['fecha_mantenimiento']
+        # Parse fecha from SQLite TEXT format to datetime object
+        try:
+            if fecha_str:
+                # SQLite stores as 'YYYY-MM-DD HH:MM:SS' or 'YYYY-MM-DD'
+                if ' ' in fecha_str:
+                    fecha = datetime.strptime(fecha_str, '%Y-%m-%d %H:%M:%S')
+                else:
+                    fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
+            else:
+                fecha = None
+        except (ValueError, TypeError):
+            fecha = None
+        
         return {
             'id': result['ID'],
             'vehiculo_id': result['vehiculo_id'],
             'tipo_mantenimiento': result['tipo_mantenimiento'],
-            'fecha_mantenimiento': result['fecha_mantenimiento'],
+            'fecha_mantenimiento': fecha,
             'kilometraje': result['kilometraje'],
             'mecanico': result['mecanico'],
             'observaciones': result['observaciones']

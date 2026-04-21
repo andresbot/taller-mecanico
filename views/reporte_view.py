@@ -14,98 +14,145 @@ class ReporteView(BaseView):
         super().__init__(master)
 
     def setup_ui(self):
-        # Variables de búsqueda
         self.busqueda_var = tk.StringVar()
         self.criterio_busqueda_var = tk.StringVar(value="Tipo")
+        self.kpi_total_var = tk.StringVar(value='0')
+        self.kpi_30d_var = tk.StringVar(value='0')
+        self.kpi_correctivo_var = tk.StringVar(value='0')
+        self.kpi_vehiculos_var = tk.StringVar(value='0')
         
-        # Contenedor centrado
         self.frame.grid_columnconfigure(0, weight=1)
-        container = ttk.Frame(self.frame)
-        container.grid(row=0, column=0, padx=10, pady=10)
+        self.frame.grid_rowconfigure(0, weight=1)
+        container = ttk.Frame(self.frame, style='Main.TFrame')
+        container.grid(row=0, column=0, padx=14, pady=12, sticky='nsew')
+        container.grid_columnconfigure(0, weight=1)
+        container.grid_rowconfigure(3, weight=1)
 
-        # Frame principal
-        main_frame = ttk.LabelFrame(container, text="Reportes", padding=10)
-        main_frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
+        hero = ttk.Frame(container, style='Main.TFrame')
+        hero.grid(row=0, column=0, sticky='ew', pady=(0, 8))
+        ttk.Label(hero, text='Reportes Analiticos', style='HeroTitle.TLabel').pack(anchor='w')
+        ttk.Label(
+            hero,
+            text='Visualizacion de metricas criticas y rendimiento de mantenimiento.',
+            style='Subtitle.TLabel'
+        ).pack(anchor='w')
 
-        # Selector de vehículo
-        ttk.Label(main_frame, text="Vehículo:").grid(row=0, column=0, sticky="w")
-        self.vehiculo_combo = ttk.Combobox(main_frame, state="readonly", width=40)
-        self.vehiculo_combo.grid(row=0, column=1, padx=5, pady=2)
+        filters = ttk.LabelFrame(container, text='Control de Reportes', padding=10)
+        filters.grid(row=1, column=0, sticky='ew', pady=(0, 10))
+        filters.columnconfigure(1, weight=1)
+        filters.columnconfigure(6, weight=1)
+
+        ttk.Label(filters, text="Vehiculo:").grid(row=0, column=0, sticky="w", padx=5)
+        self.vehiculo_combo = ttk.Combobox(filters, state="readonly", width=42)
+        self.vehiculo_combo.grid(row=0, column=1, padx=5, pady=2, sticky='w')
         self.vehiculo_combo.bind('<<ComboboxSelected>>', lambda e: self.ver_historial())
         self.cargar_vehiculos()
 
-        # Checkbox para todos los vehículos
         self.todos_var = tk.BooleanVar(value=False)
         self.todos_check = ttk.Checkbutton(
-            main_frame, text="Todos los vehículos", variable=self.todos_var,
+            filters, text="Todos los vehiculos", variable=self.todos_var,
             command=self._toggle_todos
         )
         self.todos_check.grid(row=0, column=2, padx=10, sticky="w")
 
-        # Fecha del reporte (día actual)
-        self.fecha_label = ttk.Label(main_frame, text=f"Fecha de reporte: {datetime.now().strftime('%Y-%m-%d')}")
-        self.fecha_label.grid(row=0, column=3, padx=10, sticky="e")
+        self.fecha_label = ttk.Label(filters, text=f"Fecha de reporte: {datetime.now().strftime('%Y-%m-%d')}")
+        self.fecha_label.grid(row=0, column=6, padx=10, sticky="e")
 
-        # Botones de reportes
-        ttk.Button(main_frame, text="Ver Historial", 
-                  command=self.ver_historial, style='Primary.TButton').grid(row=1, column=0, pady=10, padx=5)
-        
-        ttk.Button(main_frame, text="Editar Mantenimiento", 
-                  command=self.editar_mantenimiento, style='Info.TButton').grid(row=1, column=1, pady=10, padx=5)
-        
-        ttk.Button(main_frame, text="Eliminar Mantenimiento", 
-                  command=self.eliminar_mantenimiento, style='Danger.TButton').grid(row=1, column=2, pady=10, padx=5)
-        
-        ttk.Button(main_frame, text="Exportar a Excel", 
-                  command=self.exportar_excel, style='Success.TButton').grid(row=1, column=3, pady=10, padx=5)
+        ttk.Button(filters, text="Ver Historial", command=self.ver_historial, style='Primary.TButton').grid(row=1, column=0, pady=8, padx=5, sticky='w')
+        ttk.Button(filters, text="Editar", command=self.editar_mantenimiento, style='Info.TButton').grid(row=1, column=1, pady=8, padx=5, sticky='w')
+        ttk.Button(filters, text="Eliminar", command=self.eliminar_mantenimiento, style='Danger.TButton').grid(row=1, column=2, pady=8, padx=5, sticky='w')
+        ttk.Button(filters, text="Exportar Excel", command=self.exportar_excel, style='Success.TButton').grid(row=1, column=3, pady=8, padx=5, sticky='w')
 
-        # Frame de búsqueda/consulta
-        search_frame = ttk.LabelFrame(main_frame, text="Consultar Mantenimientos", padding=12)
-        search_frame.grid(row=2, column=0, columnspan=4, padx=10, pady=5, sticky="ew")
-        
-        ttk.Label(search_frame, text="Buscar por:").grid(row=0, column=0, sticky="w", padx=5)
-        criterio_combo = ttk.Combobox(search_frame, textvariable=self.criterio_busqueda_var, 
+        ttk.Label(filters, text="Buscar por:").grid(row=2, column=0, sticky="w", padx=5)
+        criterio_combo = ttk.Combobox(filters, textvariable=self.criterio_busqueda_var,
                                       values=["Tipo", "Mecánico", "Fecha", "Placa"], state="readonly", width=12)
-        criterio_combo.grid(row=0, column=1, padx=5)
-        
-        ttk.Label(search_frame, text="Texto:").grid(row=0, column=2, sticky="w", padx=5)
-        busqueda_entry = ttk.Entry(search_frame, textvariable=self.busqueda_var, width=25)
-        busqueda_entry.grid(row=0, column=3, padx=5)
-        busqueda_entry.bind('<KeyRelease>', lambda e: self.buscar_mantenimientos())
-        
-        ttk.Button(search_frame, text="Buscar", command=self.buscar_mantenimientos, style='Primary.TButton').grid(row=0, column=4, padx=5)
-        ttk.Button(search_frame, text="Limpiar Búsqueda", command=self.limpiar_busqueda, style='Secondary.TButton').grid(row=0, column=5, padx=5)
+        criterio_combo.grid(row=2, column=1, padx=5, sticky='w')
 
-        # Tabla de historial
+        ttk.Label(filters, text="Texto:").grid(row=2, column=2, sticky="w", padx=5)
+        busqueda_entry = ttk.Entry(filters, textvariable=self.busqueda_var, width=28)
+        busqueda_entry.grid(row=2, column=3, padx=5, sticky='w')
+        busqueda_entry.bind('<KeyRelease>', lambda e: self.buscar_mantenimientos())
+
+        ttk.Button(filters, text="Buscar", command=self.buscar_mantenimientos, style='Primary.TButton').grid(row=2, column=4, padx=5)
+        ttk.Button(filters, text="Limpiar", command=self.limpiar_busqueda, style='Secondary.TButton').grid(row=2, column=5, padx=5)
+
+        metrics = ttk.Frame(container, style='Main.TFrame')
+        metrics.grid(row=2, column=0, sticky='ew', pady=(0, 10))
+        for col in range(4):
+            metrics.grid_columnconfigure(col, weight=1)
+        self._create_metric_card(metrics, 0, 'SERVICIOS TOTAL', self.kpi_total_var, '#0F172A')
+        self._create_metric_card(metrics, 1, 'ULTIMOS 30 DIAS', self.kpi_30d_var, '#F97316')
+        self._create_metric_card(metrics, 2, 'CORRECTIVOS', self.kpi_correctivo_var, '#DC2626')
+        self._create_metric_card(metrics, 3, 'VEHICULOS EN REPORTE', self.kpi_vehiculos_var, '#2563EB')
+
+        main_frame = ttk.LabelFrame(container, text="Historial de Servicios", padding=10)
+        main_frame.grid(row=3, column=0, sticky='nsew')
+        main_frame.grid_columnconfigure(0, weight=1)
+        main_frame.grid_rowconfigure(0, weight=1)
+        
         self.setup_tabla_historial(main_frame)
 
-        # Escuchar evento global cuando se guarde un mantenimiento
         try:
             self.frame.winfo_toplevel().bind('<<HistorialActualizado>>', lambda e: self.refresh())
         except Exception:
             pass
 
-    def setup_tabla_historial(self, parent):
-        # Frame para la tabla
-        table_frame = ttk.Frame(parent)
-        table_frame.grid(row=3, column=0, columnspan=4, pady=10, sticky="nsew")
+    def _create_metric_card(self, parent, column, title, value_var, accent):
+        card = tk.Frame(parent, bg='white', bd=1, relief='solid', highlightthickness=0)
+        card.grid(row=0, column=column, padx=4, pady=4, sticky='nsew')
+        bar = tk.Frame(card, bg=accent, width=5)
+        bar.pack(side='left', fill='y')
+        content = tk.Frame(card, bg='white')
+        content.pack(side='left', fill='both', expand=True, padx=10, pady=10)
+        tk.Label(content, text=title, bg='white', fg='#64748B', font=('Segoe UI', 9, 'bold')).pack(anchor='w')
+        tk.Label(content, textvariable=value_var, bg='white', fg='#0F172A', font=('Segoe UI', 20, 'bold')).pack(anchor='w')
 
-        # Crear Treeview con columna ID oculta
+    def _format_tipo(self, tipo):
+        return {
+            'cambio_aceite': 'PREVENTIVO',
+            'frenos': 'FRENOS',
+            'general': 'GENERAL',
+            'correctivo': 'CORRECTIVO'
+        }.get(tipo, str(tipo).upper())
+
+    def _update_metricas(self, mantenimientos, registros):
+        self.kpi_total_var.set(str(len(mantenimientos)))
+
+        hoy = datetime.now().date()
+        ultimos_30 = 0
+        correctivos = 0
+        for m in mantenimientos:
+            fecha = getattr(m, 'fecha_mantenimiento', None)
+            if fecha and (hoy - fecha.date()).days <= 30:
+                ultimos_30 += 1
+            if getattr(m, 'tipo_mantenimiento', '') == 'correctivo':
+                correctivos += 1
+
+        self.kpi_30d_var.set(str(ultimos_30))
+        self.kpi_correctivo_var.set(str(correctivos))
+        self.kpi_vehiculos_var.set(str(len(set([txt for txt, _ in registros]))))
+
+    def setup_tabla_historial(self, parent):
+        table_frame = ttk.Frame(parent)
+        table_frame.grid(row=0, column=0, pady=4, sticky="nsew")
+        table_frame.grid_columnconfigure(0, weight=1)
+        table_frame.grid_rowconfigure(0, weight=1)
+
         self.tree = ttk.Treeview(table_frame, columns=(
-            "ID", "Vehículo", "Fecha", "Tipo", "Kilometraje", "Mecánico", "Observaciones"
+            "ID", "Vehículo", "Fecha", "Tipo", "Kilometraje", "Mecánico", "Observaciones", "RawTipo"
         ), show="headings", height=12)
 
-        # Configurar columnas (ID oculta)
         self.tree.heading("ID", text="ID", anchor="center")
-        self.tree.column("ID", width=0, stretch=False)  # Oculta pero accesible
+        self.tree.column("ID", width=0, stretch=False)
+        self.tree.heading("RawTipo", text="RawTipo", anchor="center")
+        self.tree.column("RawTipo", width=0, stretch=False)
         self.tree.heading("Vehículo", text="Vehículo", anchor="center")
         self.tree.heading("Fecha", text="Fecha", anchor="center")
-        self.tree.heading("Tipo", text="Tipo de Mantenimiento", anchor="center")
+        self.tree.heading("Tipo", text="Tipo de Servicio", anchor="center")
         self.tree.heading("Kilometraje", text="Kilometraje", anchor="center")
         self.tree.heading("Mecánico", text="Mecánico", anchor="center")
         self.tree.heading("Observaciones", text="Observaciones", anchor="center")
 
-        # Ajustar anchos de columna y centrar el contenido
         self.tree.column("Vehículo", width=180, anchor="center")
         self.tree.column("Fecha", width=100, anchor="center")
         self.tree.column("Tipo", width=180, anchor="center")
@@ -146,7 +193,6 @@ class ReporteView(BaseView):
             # Obtener historial (uno o todos)
             registros = []
             if self.todos_var.get():
-                # Obtener todos los mantenimientos y anotar el vehículo
                 historial = self.mantenimiento_controller.get_all()
                 for m in historial:
                     try:
@@ -161,17 +207,20 @@ class ReporteView(BaseView):
                 vehiculo_txt = vehiculo_seleccionado
                 registros = [(vehiculo_txt, m) for m in historial]
 
-            # Mostrar datos
             for vehiculo_txt, m in registros:
+                tipo_raw = m.tipo_mantenimiento if hasattr(m, 'tipo_mantenimiento') else ""
                 self.tree.insert("", "end", values=(
-                    m.id,  # ID oculto pero accesible
+                    m.id,
                     vehiculo_txt,
                     m.fecha_mantenimiento.strftime("%Y-%m-%d") if hasattr(m, 'fecha_mantenimiento') and m.fecha_mantenimiento else "",
-                    m.tipo_mantenimiento if hasattr(m, 'tipo_mantenimiento') else "",
+                    self._format_tipo(tipo_raw),
                     m.kilometraje if hasattr(m, 'kilometraje') else "",
                     m.mecanico if hasattr(m, 'mecanico') else "",
                     m.observaciones if hasattr(m, 'observaciones') else "",
+                    tipo_raw,
                 ))
+
+            self._update_metricas(historial if self.todos_var.get() else [m for _, m in registros], registros)
 
         except Exception as e:
             self.show_error(f"Error al cargar historial: {str(e)}")
@@ -182,6 +231,8 @@ class ReporteView(BaseView):
             self.cargar_vehiculos()
             if self.todos_var.get() or self.vehiculo_combo.get():
                 self.ver_historial()
+            else:
+                self._update_metricas([], [])
         except Exception as e:
             self.show_error(f"Error al refrescar: {e}")
 
@@ -194,10 +245,9 @@ class ReporteView(BaseView):
                 self.show_warning("Debe seleccionar un mantenimiento para editar")
                 return
             
-            # Obtener datos del mantenimiento seleccionado
             values = self.tree.item(selected[0])["values"]
-            mantenimiento_id = values[0]  # ID está en la primera columna (oculta)
-            tipo_mantenimiento = values[3]  # Tipo está en la columna 3
+            mantenimiento_id = values[0]
+            tipo_mantenimiento = values[7]  # RawTipo (columna oculta con el tipo en crudo)
             
             # Obtener el mantenimiento completo para saber el vehiculo_id
             mantenimiento = self.mantenimiento_controller.get_by_id(mantenimiento_id)
@@ -929,16 +979,20 @@ class ReporteView(BaseView):
         # Mostrar resultados
         if registros_filtrados:
             for vehiculo_txt, m in registros_filtrados:
+                tipo_raw = m.tipo_mantenimiento if hasattr(m, 'tipo_mantenimiento') else ""
                 self.tree.insert("", "end", values=(
                     m.id,
                     vehiculo_txt,
                     m.fecha_mantenimiento.strftime("%Y-%m-%d") if hasattr(m, 'fecha_mantenimiento') and m.fecha_mantenimiento else "",
-                    m.tipo_mantenimiento if hasattr(m, 'tipo_mantenimiento') else "",
+                    self._format_tipo(tipo_raw),
                     m.kilometraje if hasattr(m, 'kilometraje') else "",
                     m.mecanico if hasattr(m, 'mecanico') else "",
                     m.observaciones if hasattr(m, 'observaciones') else "",
+                    tipo_raw,
                 ))
+            self._update_metricas([m for _, m in registros_filtrados], registros_filtrados)
         else:
+            self._update_metricas([], [])
             self.show_info(f"No se encontraron mantenimientos con {criterio}: '{texto_busqueda}'")
 
     def limpiar_busqueda(self):
