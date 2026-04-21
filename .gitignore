@@ -4,11 +4,23 @@ __pycache__/
 *$py.class
 *.so
 .Python
-
-# Virtual Environment
+.venv/
 venv/
-env/
 ENV/
+env/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Base de datos local
+*.sqlite3
+*.db
+
+# Carpetas temporales
+tmp/
+temp/
 
 # IDE
 .vscode/
@@ -16,19 +28,6 @@ ENV/
 *.swp
 *.swo
 
-# OS
+# Sistema operativo
 .DS_Store
 Thumbs.db
-
-# Database
-*.sql~
-*.db
-
-# Logs
-*.log
-
-# Build artifacts
-build/
-dist/
-*.spec
-installer/output/
