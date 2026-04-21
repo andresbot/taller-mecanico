@@ -15,7 +15,7 @@ echo [1/4] Instalando dependencias...
 %PYTHON_EXE% -m pip install pyinstaller
 
 echo [2/4] Generando ejecutable...
-%PYTHON_EXE% -m PyInstaller --noconfirm --clean --onefile --windowed --name TallerMecanico --add-data "database_schema.sql;." main.py
+%PYTHON_EXE% -m PyInstaller --noconfirm --clean --onefile --windowed --name TallerMecanico --add-data "database_schema.sql;." --collect-all numpy --collect-all pandas --hidden-import numpy --hidden-import pandas main.py
 if errorlevel 1 (
     echo Error: fallo la construccion del ejecutable.
     exit /b 1
