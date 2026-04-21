@@ -6,7 +6,7 @@
 #define MyAppExeName "TallerMecanico.exe"
 
 [Setup]
-AppId={{A2C5DFA8-6F2B-4A3D-8F0E-1D20C90A5D11}
+AppId={{A2C5DFA8-6F2B-4A3D-8F0E-1D20C90A5D11}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}

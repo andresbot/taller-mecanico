@@ -103,3 +103,32 @@ Reporta resultados con:
 - y correcciones aplicadas.
 No cambies logica de negocio salvo que falle algo en Windows.
 ```
+
+## Cierre De Release En Windows
+
+### Resultado
+
+1. `dist/TallerMecanico.exe` generado correctamente.
+2. `dist/portable/TallerMecanicoPortable/TallerMecanico.exe` generado correctamente.
+3. `dist/portable/TallerMecanicoPortable/ABRIR_TALLER.bat` generado correctamente.
+4. `installer/output/TallerMecanico-Setup.exe` compilado correctamente con Inno Setup.
+
+### Correcciones Aplicadas
+
+1. `scripts/build_windows.bat` se ajustó para usar `.venv\Scripts\python.exe` cuando existe, evitando el alias de `python` de Windows.
+2. `installer/TallerMecanico.iss` se corrigió en `AppId` para cerrar correctamente las llaves.
+3. Se limpió la instalación dañada de `pip` en la `.venv` y se reinstaló `pyinstaller`.
+4. Se instaló Inno Setup con `winget` porque no estaba presente en el equipo.
+
+### Pruebas Realizadas
+
+1. Build Windows completo con PyInstaller.
+2. Compilación del instalador con `ISCC.exe`.
+3. Arranque del ejecutable directo con persistencia técnica mínima validada en `TM_DATA_DIR`.
+4. Arranque del portable con persistencia técnica mínima validada en `dist/portable/TallerMecanicoPortable/data`.
+
+### Observaciones
+
+1. La prueba manual completa de UI para crear cliente, vehículo y mantenimiento no pudo ejecutarse desde este entorno porque no tengo interacción visual con la aplicación.
+2. La prueba de uso en otro PC físico tampoco pudo ejecutarse aquí; solo quedó validada la parte técnica del portable localmente.
+3. El build de PyInstaller genera muchos archivos auxiliares dentro de `.venv`, pero no forman parte del paquete de release.

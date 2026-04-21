@@ -4,13 +4,18 @@ setlocal
 REM Build ejecutable Windows con PyInstaller (onefile)
 cd /d %~dp0\..
 
+set "PYTHON_EXE=%~dp0..\.venv\Scripts\python.exe"
+if not exist "%PYTHON_EXE%" (
+    set "PYTHON_EXE=py -3"
+)
+
 echo [1/4] Instalando dependencias...
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install pyinstaller
+%PYTHON_EXE% -m pip install --upgrade pip
+%PYTHON_EXE% -m pip install -r requirements.txt
+%PYTHON_EXE% -m pip install pyinstaller
 
 echo [2/4] Generando ejecutable...
-pyinstaller --noconfirm --clean --onefile --windowed --name TallerMecanico --add-data "database_schema.sql;." main.py
+%PYTHON_EXE% -m PyInstaller --noconfirm --clean --onefile --windowed --name TallerMecanico --add-data "database_schema.sql;." main.py
 if errorlevel 1 (
     echo Error: fallo la construccion del ejecutable.
     exit /b 1
