@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Permite ejecutar manualmente desde GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,19 +30,25 @@ jobs:
         python -m PyInstaller --noconfirm --clean --onefile --windowed --name TallerMecanico --add-data "database_schema.sql;." main.py
     
     - name: Create portable package
-      run: |
-        mkdir -p dist/portable/TallerMecanicoPortable/data
-        copy dist/TallerMecanico.exe dist/portable/TallerMecanicoPortable/
-        echo @echo off > dist/portable/TallerMecanicoPortable/ABRIR_TALLER.bat
-        echo setlocal >> dist/portable/TallerMecanicoPortable/ABRIR_TALLER.bat
-        echo set "TM_DATA_DIR=%%~dp0data" >> dist/portable/TallerMecanicoPortable/ABRIR_TALLER.bat
-        echo start "" "%%~dp0TallerMecanico.exe" >> dist/portable/TallerMecanicoPortable/ABRIR_TALLER.bat
-        echo TallerMecanico - USB Portable > dist/portable/TallerMecanicoPortable/LEEME_PORTABLE.txt
-        echo. >> dist/portable/TallerMecanicoPortable/LEEME_PORTABLE.txt
-        echo 1) Doble clic en ABRIR_TALLER.bat >> dist/portable/TallerMecanicoPortable/LEEME_PORTABLE.txt
-        echo 2) Trabaje normalmente en la aplicacion >> dist/portable/TallerMecanicoPortable/LEEME_PORTABLE.txt
-        echo 3) El sistema guarda y respalda automaticamente >> dist/portable/TallerMecanicoPortable/LEEME_PORTABLE.txt
       shell: cmd
+      run: |
+        if not exist dist\portable mkdir dist\portable
+        if not exist dist\portable\TallerMecanicoPortable mkdir dist\portable\TallerMecanicoPortable
+        if not exist dist\portable\TallerMecanicoPortable\data mkdir dist\portable\TallerMecanicoPortable\data
+        copy dist\TallerMecanico.exe dist\portable\TallerMecanicoPortable\
+        (
+        echo @echo off
+        echo setlocal
+        echo set "TM_DATA_DIR=%%~dp0data"
+        echo start "" "%%~dp0TallerMecanico.exe"
+        ) > dist\portable\TallerMecanicoPortable\ABRIR_TALLER.bat
+        (
+        echo TallerMecanico - USB Portable
+        echo.
+        echo 1^) Doble clic en ABRIR_TALLER.bat
+        echo 2^) Trabaje normalmente en la aplicacion
+        echo 3^) El sistema guarda y respalda automaticamente
+        ) > dist\portable\TallerMecanicoPortable\LEEME_PORTABLE.txt
     
     - name: Upload standalone executable
       uses: actions/upload-artifact@v4
